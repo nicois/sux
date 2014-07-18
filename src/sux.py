@@ -1,13 +1,18 @@
 """
 """
 from subprocess import Popen, PIPE
+from os import environ
 from os.path import join, exists, dirname
-from json import dumps
+from functools import partial
+import pickle
 
+
+PYTHON2_VENV = environ.get("PY2_VIRTUAL_ENV")
+
+
+dumps = partial(pickle.dumps, protocol=2, fix_imports=True)
+loads = pickle.loads
 NoneType = type(None)
-
-
-PYTHON2_VENV = '/tmp/py2'
 _PYTHON2_HELPER_SCRIPT = join(dirname(__file__), "py2helper.py")
 
 
@@ -23,9 +28,17 @@ class Python2Engine:
         return response
 
     def send(self, *args, **kwargs):
-        payload = dumps(args, kwargs)
-        self.process.stdin.write("{0}\n".format(payload).encode('utf-8'))
-        return "FOOOO"
+        payload = dumps((args, kwargs))
+        #self.process.stdin.write("{0}\n".format(payload).encode('utf-8'))
+        print("3L->", len(payload))
+        self.process.stdin.write("{0}\n".format(len(payload)).encode('utf-8'))
+        print("3->", payload)
+        self.process.stdin.write(payload)
+        self.process.stdin.write(b"\n")
+        self.process.stdin.flush()
+        result = self.process.stdout.readline()
+        print("->3", repr(result))
+        return loads(result)
 
 
 _engine = None
@@ -37,9 +50,10 @@ class Mock:
     def __init__(self, name, parent=None):
         self._name = name
         self._parent = parent
-        self.__remote_reference = _engine.retrieve_reference(
+        self.__remote_reference = _engine.send(
+                "retrieve reference",
                 name=name,
-                parent=parent._remote_reference)
+                parent=None if parent is None else parent._remote_reference)
 
     def __call__(self, x):
         raise NotImplementedError
