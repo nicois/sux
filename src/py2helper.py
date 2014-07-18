@@ -3,7 +3,6 @@ Remote execution server, running under python2
 """
 from sys import stdin, stdout, stderr, version_info
 from pickle import loads, dumps, PicklingError
-import os
 
 assert version_info.major == 2
 
@@ -34,6 +33,11 @@ def process_message(message):
     elif command == u"import":
         module_name = message.get("module_name")
         globals()[module_name] = __import__(module_name)
+        return "OK"
+    elif command == u"call":
+        result = _reference_mapping[message["ref"]](*message["args"], **message["kwargs"])
+        return result
+
     elif command == u"query":
         return getattr(_reference_mapping[message["parent"]], message["name"])
     else:
@@ -50,11 +54,14 @@ def main():
         response = process_message(unpickled)
         debug_message("2-> {0}".format(repr(response)))
         try:
-            pickled_response = dumps(response, protocol=2)
-            stdout.write(pickled_response)
+            payload = dumps(response, protocol=2)
         except PicklingError:
-            stdout.write("   N O T  A  P I C K L E !!")
-        stdout.write("\n")
+            n = next(counter)
+            _reference_mapping[n] = response
+            payload = "*+*+*+{0}".format(n)
+        debug_message("2A-> {0}".format(repr(payload)))
+        stdout.write("{0}\n".format(len(payload)).encode('utf-8'))
+        stdout.write(payload)
         stdout.flush()
 
 

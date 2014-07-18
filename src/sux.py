@@ -36,11 +36,14 @@ class Python2Engine:
         self.process.stdin.write("{0}\n".format(len(payload)).encode('utf-8'))
         self.process.stdin.write(payload)
         self.process.stdin.flush()
-        result = self.process.stdout.readline()
+
+        message_length = int(self.process.stdout.readline())
+        message = self.process.stdout.read(message_length)
+
         try:
-            return loads(result)
+            return loads(message)
         except Exception as ex:
-            raise NotAPickle(ex)
+            raise NotAPickle(message)
 
 
 _engine = None
@@ -49,17 +52,29 @@ _engine = None
 class Mock:
     _remote_reference = None
 
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None, remote_reference=None):
         self._name = name
         self._parent = parent
-        self._remote_reference = _engine.send(
+        self._remote_reference = remote_reference
+        if self._remote_reference is None:
+            self._remote_reference = _engine.send(
                 command="retrieve reference",
                 name=name,
                 parent=None if parent is None else parent._remote_reference)
 
-    def __call__(self, x):
-        # TODO
-        raise NotImplementedError
+    def __call__(self, *args, **kwargs):
+        try:
+            return  _engine.send(
+                    command="call",
+                    name=self._name,
+                    args=args,
+                    kwargs=kwargs,
+                    ref=self._remote_reference)
+        except NotAPickle as nap:
+            # the remote reference is passed back as the exception body
+            print("nap is", nap)
+            return Mock(name=self._name, parent=self._parent,
+                    remote_reference=nap)
 
     def __getattr__(self, attribute_name, default=None):
         #  full_attr_name="{0}.{1}".format(self._name, attribute_name)
