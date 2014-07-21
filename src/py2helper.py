@@ -19,27 +19,22 @@ _reference_mapping = {}
 def process_message(message):
     debug_message(repr(message))
     command = message.pop("command")
-    if command == u"retrieve reference":
-        n = next(counter)
-        debug_message("nn: {0}".format(n))
-        if message["parent"] is None:
-            _reference_mapping[n] = eval(message["name"])
-        else:
-            _reference_mapping[n] = getattr(
-                    _reference_mapping[message["parent"]],
-                    message["name"])
-        return n
-
-    elif command == u"import":
+    if command == u"import":
         module_name = message.get("module_name")
-        globals()[module_name] = __import__(module_name)
-        return "OK"
+        result = globals()[module_name] = __import__(module_name)
+        return result
     elif command == u"call":
-        result = _reference_mapping[message["ref"]](*message["args"], **message["kwargs"])
+        result = _reference_mapping[message["reference"]](
+                *message["args"], **message["kwargs"])
         return result
 
-    elif command == u"query":
-        return getattr(_reference_mapping[message["parent"]], message["name"])
+    elif command == u"getattr":
+        if message.get("parent", None) is not None:
+            parent = _reference_mapping[message["parent"]]
+            debug_message(str(parent))
+            return getattr(parent, message["attr"])
+        else:
+            return globals()[message["attr"]]
     else:
         assert False, message
 
@@ -53,14 +48,15 @@ def main():
         unpickled = loads(message)
         response = process_message(unpickled)
         debug_message("2-> {0}".format(repr(response)))
+        reference = -1
         try:
             payload = dumps(response, protocol=2)
         except PicklingError:
-            n = next(counter)
-            _reference_mapping[n] = response
-            payload = "*+*+*+{0}".format(n)
+            reference = str(next(counter))
+            _reference_mapping[reference] = response
+            payload = "*+*+*+{0}".format(reference)
         debug_message("2A-> {0}".format(repr(payload)))
-        stdout.write("{0}\n".format(len(payload)).encode('utf-8'))
+        stdout.write("{0} {1}\n".format(len(payload), reference))
         stdout.write(payload)
         stdout.flush()
 
