@@ -7,11 +7,10 @@ from os.path import join, exists, dirname
 from functools import partial
 import pickle
 from pickle import UnpicklingError
+from sys import version_info
 
-
+assert version_info.major == 3
 PYTHON2_VENV = environ.get("PY2_VIRTUAL_ENV")
-
-
 dumps = partial(pickle.dumps, protocol=2, fix_imports=True)
 loads = pickle.loads
 NoneType = type(None)
@@ -36,8 +35,14 @@ class Python2Engine:
         self.process.stdin.flush()
         line = self.process.stdout.readline()
         message_length, reference = line.decode('utf-8').strip().split(" ")
-        message = self.process.stdout.read(int(message_length))
-        print("3 <-", line, message)
+        message_length = int(message_length)
+        if message_length != 0:
+            message = self.process.stdout.read(message_length)
+            print("3 <-", line, message)
+        else:
+            # only got a reference back; was not picklable at the py2 end
+            print("3R <-", reference)
+            message = None
         return reference, message
 
 
@@ -52,13 +57,15 @@ def value_or_reference(command, parent=None, **kwargs):
         reference, pickled = _engine.send(command=command,
                                           parent=parent,
                                           **kwargs)
-        unpickled = loads(pickled)
-        return unpickled
+        if pickled is not None:
+            unpickled = loads(pickled)
+            return unpickled
     except (ImportError, UnpicklingError):
         # A valid pickle, but couldn't unpickle
-        assert reference != -1
-        print("creating mock with", kwargs, reference, parent)
-        return Mock(remote_reference=reference, parent=parent)
+        pass
+    assert reference != -1
+    print("creating mock with", kwargs, reference, parent)
+    return Mock(remote_reference=reference, parent=parent)
 
 
 class Mock:

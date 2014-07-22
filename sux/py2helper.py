@@ -21,9 +21,13 @@ def process_message(message):
     command = message.pop("command")
     if command == u"import":
         module_name = message.get("module_name")
-        result = globals()[module_name] = __import__(module_name)
+        result = globals()[module_name] = __import__(module_name, fromlist=["foo"])
         return result
     elif command == u"call":
+        debug_message("M is {0}".format(message))
+        debug_message("R is {0}".format(_reference_mapping[message["reference"]]))
+        debug_message("Invoking {0} with args={1} and kw={2}"
+                .format(message["reference"], message["args"], message["kwargs"]))
         result = _reference_mapping[message["reference"]](
                 *message["args"], **message["kwargs"])
         return result
@@ -36,6 +40,7 @@ def process_message(message):
         else:
             return globals()[message["attr"]]
     else:
+        # unhandled command
         assert False, message
 
 
@@ -48,16 +53,18 @@ def main():
         unpickled = loads(message)
         response = process_message(unpickled)
         debug_message("2-> {0}".format(repr(response)))
-        reference = -1
+        reference = str(next(counter))
+        _reference_mapping[reference] = response
+        length = 0
         try:
             payload = dumps(response, protocol=2)
+            length = len(payload)
         except PicklingError:
-            reference = str(next(counter))
-            _reference_mapping[reference] = response
-            payload = "*+*+*+{0}".format(reference)
+            payload = "*+*+*+"  # invalid pickle format
         debug_message("2A-> {0}".format(repr(payload)))
-        stdout.write("{0} {1}\n".format(len(payload), reference))
-        stdout.write(payload)
+        stdout.write("{0} {1}\n".format(length, reference))
+        if length > 0:
+            stdout.write(payload)
         stdout.flush()
 
 
