@@ -56,7 +56,10 @@ def value_or_reference(command, parent=None, **kwargs):
                                           **kwargs)
         if pickled is not None:
             unpickled = loads(pickled)
-            return unpickled
+            if isinstance(unpickled, Exception):
+                raise unpickled
+            else:
+                return unpickled
     except (ImportError, UnpicklingError):
         # A valid pickle, but couldn't unpickle
         pass

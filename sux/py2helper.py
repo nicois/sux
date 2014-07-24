@@ -50,8 +50,11 @@ def main():
         message_length = int(stdin.readline())
         message = stdin.read(message_length)
         debug_message(repr(message_length))
-        unpickled = loads(message)
-        response = process_message(unpickled)
+        try:
+            unpickled = loads(message)
+            response = process_message(unpickled)
+        except Exception as ex:
+            response = Exception(str(ex))  # ensure the exception is unpicklable at the other end
         debug_message("2-> {0}".format(repr(response)))
         reference = str(next(counter))
         _reference_mapping[reference] = response
