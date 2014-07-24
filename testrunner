@@ -3,5 +3,4 @@
 VM=/tmp/py2-virtualenv
 # [ -d "$VM" ] && rm -rf "$VM"
 [ -d "$VM" ] || ( virtualenv -ppython2 "$VM" ; "$VM"/bin/pip install pyxero )
-cd src
-PY2_VIRTUAL_ENV="$VM" py.test  "$@" test.py
+PY2_VIRTUAL_ENV="$VM" py.test  "$@"
