@@ -1,8 +1,7 @@
 #!/bin/bash -x
 set -e
 
-[ -d .requirements ]
-cd .requirements
+pushd .requirements3
 for reqfile in requirements*txt ; do
     TEMPDIR="$(mktemp -d /tmp/req.XXXXXXX)"
     virtualenv -ppython3 "$TEMPDIR"
@@ -11,3 +10,15 @@ for reqfile in requirements*txt ; do
     pip freeze | sort -n > "../$reqfile"
     rm -rf "$TEMPDIR"
 done
+
+popd
+pushd .requirements2
+for reqfile in requirements*txt ; do
+    TEMPDIR="$(mktemp -d /tmp/req.XXXXXXX)"
+    virtualenv -ppython2 "$TEMPDIR"
+    source "$TEMPDIR"/bin/activate
+    pip install -r "$reqfile"
+    pip freeze | sort -n > "../py2-$reqfile"
+    rm -rf "$TEMPDIR"
+done
+popd
