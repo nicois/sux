@@ -65,7 +65,7 @@ def value_or_reference(command, parent=None, **kwargs):
         if pickled is not None:
             unpickled = loads(pickled)
             if isinstance(unpickled, Exception):
-                exception_name, exception_text = str(unpickled).split(":", 1)
+                exception_name, exception_text = unpickled.args
                 raise getattr(exceptions, exception_name)(exception_text)
             else:
                 return unpickled

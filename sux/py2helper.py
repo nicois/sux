@@ -44,7 +44,7 @@ def main():
             response = process_message(unpickled)
         except Exception as ex:
             # ensure the exception is unpicklable at the other end
-            response = Exception(str(ex))
+            response = Exception(ex.__class__.__name__, ex.message)
         reference = str(next(counter))
         _reference_mapping[reference] = response
         length = 0
