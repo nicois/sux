@@ -19,7 +19,6 @@ vars(_sux).update({'Mock': Mock})
 modules["sux"] = _sux
 
 
-counter = iter(xrange(9999999))
 _reference_mapping = {}
 
 
@@ -39,7 +38,9 @@ def process_message(message):
         result = _reference_mapping[message["reference"]](
                 *message["args"], **message["kwargs"])
         return result
-
+    elif command == u"del":
+        del _reference_mapping[message["reference"]]
+        return "OK"
     elif command == u"getattr":
         if message.get("parent", None) is not None:
             parent = _reference_mapping[message["parent"]]
@@ -63,7 +64,7 @@ def main():
             debug(format_tb)
             # ensure the exception is unpicklable at the other end
             response = Exception(ex.__class__.__name__, ex.message)
-        reference = str(next(counter))
+        reference = str(id(response))
         _reference_mapping[reference] = response
         length = 0
         debug(response)

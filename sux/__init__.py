@@ -105,6 +105,11 @@ class Mock:
                                     attr=attribute_name)
         return result
 
+    def __del__(self):
+        value_or_reference(
+            command="del",
+            reference=self._remote_reference)
+
     def __getnewargs__(self):
         return self._remote_reference,
 
