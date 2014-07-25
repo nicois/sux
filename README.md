@@ -34,7 +34,7 @@ The final command will attempt to connect to S3, and will raise a
 
 Tell me More!
 =============
-https://travis-ci.org/nicois/sux.svg?branch=master
+![CI status](https://travis-ci.org/nicois/sux.svg?branch=master)
 
 Is this safe?
 -------------
