@@ -69,7 +69,8 @@ def value_or_reference(command, **kwargs):
             unpickled = loads(pickled)
             if isinstance(unpickled, Exception):
                 exception_name, exception_text = unpickled.args
-                raise getattr(exceptions, exception_name)(exception_text)
+                raise getattr(exceptions,
+                        exception_name.decode('utf-8'))(exception_text)
             else:
                 return unpickled
     except (ImportError, UnpicklingError):
