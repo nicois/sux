@@ -35,10 +35,8 @@ class Python2Engine:
         message_length = int(message_length)
         if message_length != 0:
             message = self.process.stdout.read(message_length)
-            print("3 <-", line, message)
         else:
             # only got a reference back; was not picklable at the py2 end
-            print("3R <-", reference)
             message = None
         return reference, message
 
@@ -64,7 +62,6 @@ def value_or_reference(command, parent=None, **kwargs):
         # A valid pickle, but couldn't unpickle
         pass
     assert reference != -1
-    print("creating mock with", kwargs, reference, parent)
     return Mock(remote_reference=reference, parent=parent)
 
 
