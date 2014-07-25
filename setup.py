@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name="sux",
-    version="0.0.1",
+    version="0.0.2",
     author="Nicholas Farrell",
     author_email="nicholas.farrell@gmail.com",
     description=("Use python2 packages from python3, if you really have to"),
