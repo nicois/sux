@@ -58,13 +58,12 @@ class Python2Engine:
 _engine = None
 
 
-def value_or_reference(command, parent=None, **kwargs):
+def value_or_reference(command, **kwargs):
 
     reference = None
     pickled = None
     try:
         reference, pickled = _engine.send(command=command,
-                                          parent=parent,
                                           **kwargs)
         if pickled is not None:
             unpickled = loads(pickled)
@@ -77,14 +76,13 @@ def value_or_reference(command, parent=None, **kwargs):
         # A valid pickle, but couldn't unpickle
         pass
     assert reference != -1
-    return Mock(remote_reference=reference, parent=parent)
+    return Mock(remote_reference=reference)
 
 
 class Mock:
     _remote_reference = None
 
-    def __init__(self, remote_reference, parent=None):
-        self._parent = parent
+    def __init__(self, remote_reference):
         self._remote_reference = remote_reference
 
     def __call__(self, *args, **kwargs):
@@ -95,10 +93,15 @@ class Mock:
                     kwargs=kwargs)
 
     def __getattr__(self, attribute_name):
+        if attribute_name.startswith("_"):
+            raise AttributeError(attribute_name)
         result = value_or_reference(command="getattr",
                                     parent=self._remote_reference,
                                     attr=attribute_name)
         return result
+
+    def __getnewargs__(self):
+        return self._remote_reference,
 
 
 def to_use(module_name, winge=False):

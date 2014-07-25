@@ -1,17 +1,36 @@
 """
 Remote execution server, running under python2
 """
-from sys import stdin, stdout, version_info
+import imp
+from sys import stdin, stdout, stderr, version_info, modules
 from pickle import loads, dumps, PicklingError
 
 assert version_info.major == 2
+
+
+class Mock(object):
+    def __new__(cls, reference_id):
+        return _reference_mapping[reference_id]
+
+    def __getnewargs__(self):
+        return "fred"
+
+
+_sux = imp.new_module('sux')
+vars(_sux).update({'Mock': Mock})
+modules["sux"] = _sux
 
 
 counter = iter(xrange(9999999))
 _reference_mapping = {}
 
 
+def debug(msg):
+    stderr.write(str(msg) + "\n")
+
+
 def process_message(message):
+    debug(message)
     command = message.pop("command")
     if command == u"import":
         module_name = message.get("module_name")
