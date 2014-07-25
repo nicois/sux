@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+import logging
 from os import environ
 from os.path import join, exists, dirname
 from functools import partial
@@ -12,6 +13,7 @@ dumps = partial(pickle.dumps, protocol=2, fix_imports=True)
 loads = pickle.loads
 NoneType = type(None)
 _PYTHON2_HELPER_SCRIPT = join(dirname(__file__), "py2helper.py")
+logger = logging.getLogger("sux")
 
 
 class Python2Exception(Exception):
@@ -36,6 +38,7 @@ class Python2Engine:
                 stdin=PIPE, stdout=PIPE)
 
     def send(self, **kwargs):
+        logger.debug("Sending {0}".format(kwargs))
         payload = dumps(kwargs)
         self.process.stdin.write("{0}\n".format(len(payload)).encode('utf-8'))
         self.process.stdin.write(payload)
@@ -48,6 +51,7 @@ class Python2Engine:
         else:
             # only got a reference back; was not picklable at the py2 end
             message = None
+        logger.debug("Received back: {0}, {1}".format(reference, message))
         return reference, message
 
 
@@ -87,7 +91,6 @@ class Mock:
         return value_or_reference(
                     command="call",
                     reference=self._remote_reference,
-                    parent=self._parent,
                     args=args,
                     kwargs=kwargs)
 
@@ -95,7 +98,6 @@ class Mock:
         result = value_or_reference(command="getattr",
                                     parent=self._remote_reference,
                                     attr=attribute_name)
-        #setattr(self, attribute_name, result)
         return result
 
 
