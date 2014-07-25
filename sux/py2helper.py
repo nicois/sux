@@ -1,6 +1,7 @@
 """
 Remote execution server, running under python2
 """
+from traceback import format_tb
 import imp
 from sys import stdin, stdout, stderr, version_info, modules
 from pickle import loads, dumps, PicklingError
@@ -11,9 +12,6 @@ assert version_info.major == 2
 class Mock(object):
     def __new__(cls, reference_id):
         return _reference_mapping[reference_id]
-
-    def __getnewargs__(self):
-        return "fred"
 
 
 _sux = imp.new_module('sux')
@@ -62,11 +60,13 @@ def main():
             unpickled = loads(message)
             response = process_message(unpickled)
         except Exception as ex:
+            debug(format_tb)
             # ensure the exception is unpicklable at the other end
             response = Exception(ex.__class__.__name__, ex.message)
         reference = str(next(counter))
         _reference_mapping[reference] = response
         length = 0
+        debug(response)
         try:
             payload = dumps(response, protocol=2)
             length = len(payload)

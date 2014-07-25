@@ -10,7 +10,7 @@ from sys import version_info
 assert version_info.major == 3
 PYTHON2_VENV = environ["PY2_VIRTUAL_ENV"]
 dumps = partial(pickle.dumps, protocol=2, fix_imports=True)
-loads = pickle.loads
+loads = partial(pickle.loads, encoding="bytes")
 NoneType = type(None)
 _PYTHON2_HELPER_SCRIPT = join(dirname(__file__), "py2helper.py")
 logger = logging.getLogger("sux")
