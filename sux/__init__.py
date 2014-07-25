@@ -1,5 +1,6 @@
 from subprocess import Popen, PIPE
 import logging
+from threading import Lock
 from os import environ
 from os.path import join, exists, dirname
 from functools import partial
@@ -32,27 +33,30 @@ exceptions = __Exceptions()
 
 class Python2Engine:
     def __init__(self, venv):
+        self._lock = Lock()
         python2_exe = join(PYTHON2_VENV, "bin/python")
         assert exists(python2_exe)
         self.process = Popen([python2_exe, _PYTHON2_HELPER_SCRIPT],
                 stdin=PIPE, stdout=PIPE)
 
     def send(self, **kwargs):
-        logger.debug("Sending {0}".format(kwargs))
-        payload = dumps(kwargs)
-        self.process.stdin.write("{0}\n".format(len(payload)).encode('utf-8'))
-        self.process.stdin.write(payload)
-        self.process.stdin.flush()
-        line = self.process.stdout.readline()
-        message_length, reference = line.decode('utf-8').strip().split(" ")
-        message_length = int(message_length)
-        if message_length != 0:
-            message = self.process.stdout.read(message_length)
-        else:
-            # only got a reference back; was not picklable at the py2 end
-            message = None
-        logger.debug("Received back: {0}, {1}".format(reference, message))
-        return reference, message
+        with self._lock:
+            logger.debug("Sending {0}".format(kwargs))
+            payload = dumps(kwargs)
+            self.process.stdin.write(
+                    "{0}\n".format(len(payload)).encode('utf-8'))
+            self.process.stdin.write(payload)
+            self.process.stdin.flush()
+            line = self.process.stdout.readline()
+            message_length, reference = line.decode('utf-8').strip().split(" ")
+            message_length = int(message_length)
+            if message_length != 0:
+                message = self.process.stdout.read(message_length)
+            else:
+                # only got a reference back; was not picklable at the py2 end
+                message = None
+            logger.debug("Received back: {0}, {1}".format(reference, message))
+            return reference, message
 
 
 _engine = None
