@@ -14,8 +14,18 @@ NoneType = type(None)
 _PYTHON2_HELPER_SCRIPT = join(dirname(__file__), "py2helper.py")
 
 
-class NotAPickle(Exception):
+class Python2Exception(Exception):
     pass
+
+
+class __Exceptions:
+    def __getattr__(self, name):
+        new_exception = type(name, (Python2Exception,), {})
+        setattr(self, name, new_exception)
+        return new_exception
+
+
+exceptions = __Exceptions()
 
 
 class Python2Engine:
@@ -55,7 +65,8 @@ def value_or_reference(command, parent=None, **kwargs):
         if pickled is not None:
             unpickled = loads(pickled)
             if isinstance(unpickled, Exception):
-                raise unpickled
+                exception_name, exception_text = str(unpickled).split(":", 1)
+                raise getattr(exceptions, exception_name)(exception_text)
             else:
                 return unpickled
     except (ImportError, UnpicklingError):

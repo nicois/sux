@@ -29,7 +29,7 @@ and get to work:
     conn.create_bucket("foo")
 
 The final command will attempt to connect to S3, and will raise a
-403 exception.
+sux.exceptions.S3ResponseError exception.
 
 
 Tell me More!
@@ -39,7 +39,8 @@ Tell me More!
 Is this safe?
 -------------
 Probably not. All objects created in the python2 environment are
-held in memory, so not garbage collection takes place.
+held in memory, so no garbage collection takes place until the
+python3 process exits.
 
 Is this fast?
 -------------
@@ -52,3 +53,9 @@ Each time you interact with the `sux` module, it tries to give you back a
 native python representation of whatever ran in the python2 space. If
 that's not possible, it passes back a proxy object instead. Whenever you
 interact with that proxy object
+
+What about exceptions?
+----------------------
+Any exception raised in the python2 environment
+will cause an exception of the same name to be raised in the python3
+space. See tests.test_boto for an example.
