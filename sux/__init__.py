@@ -1,5 +1,6 @@
 from subprocess import Popen, PIPE
 import logging
+import atexit
 from threading import Lock
 from os import environ
 from os.path import join, exists, dirname
@@ -34,6 +35,7 @@ exceptions = __Exceptions()
 
 
 class Python2Engine:
+
     def __init__(self, venv):
         self._lock = Lock()
         python2_exe = join(PYTHON2_VENV, "bin/python")
@@ -60,12 +62,21 @@ class Python2Engine:
             logger.debug("Received back: {0}, {1}".format(reference, message))
             return reference, message
 
+shutting_down = False
+
+
+@atexit.register
+def notify_engine_of_shutdown():
+    global shutting_down
+    shutting_down = True
+
 
 _engine = None
 
 
-def value_or_reference(command, **kwargs):
-
+def _value_or_reference(command, **kwargs):
+    if shutting_down:
+        return None  # this prevent segfaults on termination
     reference = None
     pickled = None
     try:
@@ -93,7 +104,7 @@ class Mock:
         self._remote_reference = remote_reference
 
     def __call__(self, *args, **kwargs):
-        return value_or_reference(
+        return _value_or_reference(
                     command="call",
                     reference=self._remote_reference,
                     args=args,
@@ -102,13 +113,13 @@ class Mock:
     def __getattr__(self, attribute_name):
         if attribute_name.startswith("_"):
             raise AttributeError(attribute_name)
-        result = value_or_reference(command="getattr",
+        result = _value_or_reference(command="getattr",
                                     parent=self._remote_reference,
                                     attr=attribute_name)
         return result
 
     def __del__(self):
-        value_or_reference(
+        _value_or_reference(
             command="del",
             reference=self._remote_reference)
 
@@ -120,5 +131,5 @@ def to_use(module_name, winge=False):
     global _engine
     if _engine is None:
         _engine = Python2Engine(PYTHON2_VENV)
-    return value_or_reference(command="import",
+    return _value_or_reference(command="import",
                               module_name=module_name)
