@@ -31,9 +31,8 @@ and get to work:
 The final command will attempt to connect to S3, and will raise
 sux.exceptions.S3ResponseError.
 
-Note that the `to_use` operator expects a module name to be passed,
-not a module's attribute. e.g. with the pyxero module, you might
-choose to do the following:
+Note that the `to_use` operator expects a package name to be passed.
+e.g. with the pyxero package, you might choose to do the following:
 
     PublicCredentials = sux.to_use('xero.auth').PublicCredentials
     Xero = sux.to_use('xero').Xero
