@@ -7,6 +7,8 @@ from functools import partial
 import pickle
 from pickle import UnpicklingError
 from sys import version_info
+from .pickle_fixer import bytes_to_unicode
+
 
 assert version_info.major == 3
 PYTHON2_VENV = environ["PY2_VIRTUAL_ENV"]
@@ -70,7 +72,7 @@ def value_or_reference(command, **kwargs):
         reference, pickled = _engine.send(command=command,
                                           **kwargs)
         if pickled is not None:
-            unpickled = loads(pickled)
+            unpickled = bytes_to_unicode(loads(pickled))
             if isinstance(unpickled, Exception):
                 exception_name, exception_text = unpickled.args
                 raise getattr(exceptions,
