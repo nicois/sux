@@ -1,2 +1,2 @@
-* instead of using a range() for getting ref keys, just use id()
 * use py.test fixtures to make the venv
+* handle the case where multiple mocks refer to the same object. atm __del__ will prematurely delete the reference!

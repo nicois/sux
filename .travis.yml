@@ -1,7 +1,8 @@
 language: python
 python:
-  - "3.4"
-# command to install dependencies
-install: "pip install -r requirements-test.txt"
-# command to run tests
+- '3.4'
+install: pip install -r requirements-test.txt
 script: ./testrunner
+notifications:
+  slack:
+    secure: OugsYyuTmD9qSzo6JomRN+ZhQ3yBBBoOFbMkMOP7KHOVW+LN0XrlvmVG63VzPnyrAVro49+jxvw/KB95VzjAvYTt1yNI6A3SjsN76obs6lYVA33w4bKc9eh8k0/ZkDoqLeBFllw+EvmXPL+P3aC3JcWvLKK/HKUFCyYngJ5D5Ow=
