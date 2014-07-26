@@ -19,6 +19,7 @@ vars(_sux).update({'Mock': Mock})
 modules["sux"] = _sux
 
 
+counter = iter(xrange(9999999))
 _reference_mapping = {}
 
 
@@ -64,7 +65,7 @@ def main():
             debug(format_tb)
             # ensure the exception is unpicklable at the other end
             response = Exception(ex.__class__.__name__, ex.message)
-        reference = str(id(response))
+        reference = str(next(counter))
         _reference_mapping[reference] = response
         length = 0
         debug(response)
