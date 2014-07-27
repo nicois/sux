@@ -12,7 +12,7 @@ from .pickle_fixer import bytes_to_unicode
 
 
 assert version_info.major == 3
-PYTHON2_VENV = environ["PY2_VIRTUAL_ENV"]
+PYTHON2_VENV = environ.get("PY2_VIRTUAL_ENV", None)
 dumps = partial(pickle.dumps, protocol=2, fix_imports=True)
 loads = partial(pickle.loads, encoding="bytes")
 NoneType = type(None)
@@ -38,8 +38,9 @@ class Python2Engine:
 
     def __init__(self, venv):
         self._lock = Lock()
-        python2_exe = join(PYTHON2_VENV, "bin/python")
-        assert exists(python2_exe)
+        assert venv is not None, "'PY2_VIRTUAL_ENV' is not defined"
+        python2_exe = join(venv, "bin/python")
+        assert exists(python2_exe), "{0} does not exist!".format(python2_exe)
         self.process = Popen([python2_exe, _PYTHON2_HELPER_SCRIPT],
                 stdin=PIPE, stdout=PIPE)
 

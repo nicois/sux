@@ -1,9 +1,0 @@
-argparse==1.2.1
-boto==2.31.1
-oauthlib==0.6.3
-python-dateutil==2.2
-pyxero==0.5.2
-requests==2.3.0
-requests-oauthlib==0.4.1
-six==1.7.3
-wsgiref==0.1.2

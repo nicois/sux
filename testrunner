@@ -1,7 +1,0 @@
-#!/bin/bash -e
-
-VM=/tmp/py2-virtualenv
-DIR="$(cd $(dirname $0); pwd)"
-# [ -d "$VM" ] && rm -rf "$VM"
-[ -d "$VM" ] || ( virtualenv -ppython2 "$VM" ; "$VM"/bin/pip install -r "${DIR}/py2-requirements-test.txt" )
-PY2_VIRTUAL_ENV="$VM" py.test  "$@"
