@@ -35,14 +35,32 @@ exceptions = __Exceptions()
 
 
 class Python2Engine:
+    _cache = {}
 
-    def __init__(self, venv):
+    @classmethod
+    def new(cls, *args):
+        """
+        Returns an existing instance if the kwargs
+        match those provided earlier. Otherwise,
+        create a new instance.
+        """
+        try:
+            return cls._cache[args]
+        except KeyError:
+            new_instance = cls._cache[args] = cls(*args)
+            return new_instance
+
+    def __init__(self, venv, cwd=None):
         self._lock = Lock()
         assert venv is not None, "'PY2_VIRTUAL_ENV' is not defined"
+        if cwd is None:
+            cwd = venv
         python2_exe = join(venv, "bin/python")
         assert exists(python2_exe), "{0} does not exist!".format(python2_exe)
+        logger.debug("Starting Python2 engine in {0}".format(cwd))
+        env = {"PYTHONPATH": cwd}
         self.process = Popen([python2_exe, _PYTHON2_HELPER_SCRIPT],
-                stdin=PIPE, stdout=PIPE)
+                stdin=PIPE, stdout=PIPE, env=env, cwd=cwd)
 
     def send(self, **kwargs):
         with self._lock:
@@ -72,17 +90,14 @@ def notify_engine_of_shutdown():
     shutting_down = True
 
 
-_engine = None
-
-
-def _value_or_reference(command, **kwargs):
+def _value_or_reference(command, engine, **kwargs):
     if shutting_down:
         return None  # this prevent segfaults on termination
     reference = None
     pickled = None
     try:
-        reference, pickled = _engine.send(command=command,
-                                          **kwargs)
+        reference, pickled = engine.send(command=command,
+                                         **kwargs)
         if pickled is not None:
             unpickled = bytes_to_unicode(loads(pickled))
             if isinstance(unpickled, Exception):
@@ -95,18 +110,21 @@ def _value_or_reference(command, **kwargs):
         # A valid pickle, but couldn't unpickle
         pass
     assert reference != -1
-    return Mock(remote_reference=reference)
+    return Mock(remote_reference=reference, engine=engine)
 
 
 class Mock:
     _remote_reference = None
+    _engine = None
 
-    def __init__(self, remote_reference):
+    def __init__(self, remote_reference, engine):
+        self._engine = engine
         self._remote_reference = remote_reference
 
     def __call__(self, *args, **kwargs):
         return _value_or_reference(
                     command="call",
+                    engine=self._engine,
                     reference=self._remote_reference,
                     args=args,
                     kwargs=kwargs)
@@ -115,22 +133,25 @@ class Mock:
         if attribute_name.startswith("_"):
             raise AttributeError(attribute_name)
         result = _value_or_reference(command="getattr",
+                                    engine=self._engine,
                                     parent=self._remote_reference,
                                     attr=attribute_name)
         return result
 
     def __del__(self):
-        _value_or_reference(
-            command="del",
-            reference=self._remote_reference)
+        if self._engine is not None:
+            _value_or_reference(
+                command="del",
+                engine=self._engine,
+                reference=self._remote_reference)
 
     def __getnewargs__(self):
         return self._remote_reference,
 
 
-def to_use(module_name, winge=False):
-    global _engine
-    if _engine is None:
-        _engine = Python2Engine(PYTHON2_VENV)
+def to_use(module_name, winge=False, cwd=None):
+    engine = Python2Engine.new(PYTHON2_VENV, cwd)
+    assert engine is not None
     return _value_or_reference(command="import",
+                              engine=engine,
                               module_name=module_name)
