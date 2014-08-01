@@ -7,6 +7,17 @@ For those times when you really need to use a
 non-python-3-compliant module but don't
 want to downgrade your whole system to python 2.
 
+Are you crazy?
+--------------
+Yes, a little, but this actually works!
+
+How could this possibly work?
+-----------------------------
+Simply install your python2 packages as you would normally, in a python2 environment.
+Then, in your python3 space, you will install and invoke `sux`, and it will provide a
+"tunnel" through to python2, relaying your interactions between the two environments.
+
+
 Quickstart
 ----------
 In a python3 (virtual) env:
