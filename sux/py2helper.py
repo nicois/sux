@@ -57,8 +57,12 @@ def process_message(message):
 def main():
     finished = False
     while not finished:
-        message_length = int(stdin.readline())
-        message = stdin.read(message_length)
+        try:
+            message_length = int(stdin.readline())
+            message = stdin.read(message_length)
+        except ValueError:
+            finished = True
+            break
         try:
             unpickled = loads(message)
             response = process_message(unpickled)
