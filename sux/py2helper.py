@@ -24,7 +24,8 @@ _reference_mapping = {}
 
 
 def debug(msg):
-    stderr.write(str(msg) + "\n")
+    #stderr.write(str(msg) + "\n")
+    pass
 
 
 def process_message(message):

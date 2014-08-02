@@ -27,5 +27,4 @@ def bytes_to_unicode(ob):
         ro = ob
     else:
         ro = ob
-        print("unprocessed object: {0} {1}".format(t, ob))
     return ro
