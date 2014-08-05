@@ -17,7 +17,7 @@ setup(
     author_email="nicholas.farrell@gmail.com",
     description=("Transparently use python2 packages from python3"),
     license = "BSD",
-    keywords = "python2",
+    keywords = "python3",
     packages=['sux', 'tests'],
     install_requires=[
         'setuptools',
