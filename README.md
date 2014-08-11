@@ -13,9 +13,10 @@ Yes, a little, but this actually works!
 
 How could this possibly work?
 -----------------------------
-Simply install your python2 packages as you would normally, in a python2 environment.
-Then, in your python3 space, you will install and invoke `sux`, and it will provide a
-"tunnel" through to python2, relaying your interactions between the two environments.
+Simply install your python2 packages as you would normally, in a python2 (virtual)
+environment. Then, in your python3 space, you will install and invoke `sux`, and it
+will provide a "tunnel" through to python2, relaying your interactions between the
+two environments.
 
 
 Quickstart
@@ -58,11 +59,31 @@ Tell me More!
 =============
 ![CI status](https://travis-ci.org/nicois/sux.svg?branch=master)
 
-Is it safe?
+What works?
 -----------
-In my limited testing, I have not yet found anything it can't handle. If you do,
-please give me details, and I will do my best to get it working for you. It is
-thread-safe, supports function calls with python2 objects as arguments, and more.
+* Importing a python2 package
+* Accessing attributes in that package (recursively)
+* Invoking functions and methods on the python2 objects
+* Handling exceptions
+* Garbage collection
+
+What doesn't (yet) work?
+------------------
+* Simultaneous operations from multiple threads.
+* Passing python3 objects to python2 space. (e.g. registering a 'hook' function with a python2 object)
+* Accessing the special class methods starting with  double-underscore.
+
+Is it thread-safe?
+------------------
+Yes. However, only one thread can be operating on a python2 object
+at a time. So if you make a long-running call via sux, if another
+thread attempts to use a python2 object, it will block.
+
+How are exceptions handled?
+---------------------------
+Any exception raised in the python2 environment
+will cause an exception of the same name (to be raised in the python3
+space. See tests.test_boto for an example.
 
 
 Is this fast?
@@ -70,9 +91,3 @@ Is this fast?
 Every interaction between python2 and python3 uses `pickle` for
 transport and is not optimised for speed. Then again, the python2 instance
 runs in a separate process, with a separate GIL.
-
-What about exceptions?
-----------------------
-Any exception raised in the python2 environment
-will cause an exception of the same name to be raised in the python3
-space. See tests.test_boto for an example.
