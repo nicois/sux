@@ -24,6 +24,10 @@ _reference_mapping = {}
 
 
 def debug(msg):
+    return  # TODO: how do I nicely send the debug messages back
+            # to python3 land? I think this will be easier when
+            # support for python3 hooks is added, as there
+            # might be a better bidirectional data transfer system
     stderr.write(str(msg) + "\n")
     pass
 
