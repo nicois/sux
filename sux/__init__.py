@@ -139,7 +139,7 @@ class Mock:
         return result
 
     def __del__(self):
-        if self._engine is not None:
+        if self._engine is not None and _value_or_reference is not None:
             _value_or_reference(
                 command="del",
                 engine=self._engine,
