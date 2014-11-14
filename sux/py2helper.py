@@ -24,7 +24,12 @@ _reference_mapping = {}
 
 
 def debug(msg):
+    return  # TODO: how do I nicely send the debug messages back
+            # to python3 land? I think this will be easier when
+            # support for python3 hooks is added, as there
+            # might be a better bidirectional data transfer system
     stderr.write(str(msg) + "\n")
+    pass
 
 
 def process_message(message):
@@ -56,8 +61,12 @@ def process_message(message):
 def main():
     finished = False
     while not finished:
-        message_length = int(stdin.readline())
-        message = stdin.read(message_length)
+        try:
+            message_length = int(stdin.readline())
+            message = stdin.read(message_length)
+        except ValueError:
+            finished = True
+            break
         try:
             unpickled = loads(message)
             response = process_message(unpickled)

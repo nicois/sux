@@ -2,7 +2,15 @@ import gc
 import sux
 
 
+# TODO: test a weakref does not preserve the reference
+
+
 def test_multiple_refs(py2venv):
+    """
+    When the same python2 object is referred to twice, and then
+    one reference is garbage collected, ensure the object is
+    still available in python2 land.
+    """
     py2venv.install("boto==2.31.1")
     connection = sux.to_use('boto.s3.connection')
     # create two references to the same object

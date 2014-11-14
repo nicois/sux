@@ -9,6 +9,7 @@ import pickle
 from pickle import UnpicklingError
 from sys import version_info
 from .pickle_fixer import bytes_to_unicode
+from .operator_hackiness import OperatorHackiness
 
 
 assert version_info.major == 3
@@ -113,13 +114,21 @@ def _value_or_reference(command, engine, **kwargs):
     return Mock(remote_reference=reference, engine=engine)
 
 
-class Mock:
+class Mock(OperatorHackiness):
     _remote_reference = None
     _engine = None
+
+    _allowed_special_methods = set(method for method in dir(int)
+            if method.startswith("__"))
 
     def __init__(self, remote_reference, engine):
         self._engine = engine
         self._remote_reference = remote_reference
+
+    def __add__(self, other):
+        return self._py2get(command="__add__",
+                attr=attribute_name)
+
 
     def __call__(self, *args, **kwargs):
         return _value_or_reference(
@@ -130,13 +139,17 @@ class Mock:
                     kwargs=kwargs)
 
     def __getattr__(self, attribute_name):
-        if attribute_name.startswith("_"):
+        if attribute_name.startswith("_") and \
+                attribute_name not in self._allowed_special_methods:
             raise AttributeError(attribute_name)
-        result = _value_or_reference(command="getattr",
+        return self._py2get(command="getattr",
+                attr=attribute_name)
+
+    def _py2get(self, command, **kw):
+        return _value_or_reference(command=command,
                                     engine=self._engine,
                                     parent=self._remote_reference,
-                                    attr=attribute_name)
-        return result
+                                    **kw)
 
     def __del__(self):
         if self._engine is not None and _value_or_reference is not None:
