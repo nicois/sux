@@ -39,19 +39,20 @@ class Python2Engine:
     _cache = {}
 
     @classmethod
-    def new(cls, *args):
+    def new(cls, **kw):
         """
         Returns an existing instance if the kwargs
         match those provided earlier. Otherwise,
         create a new instance.
         """
+        cache_key = dumps(kw)
         try:
-            return cls._cache[args]
+            return cls._cache[cache_key]
         except KeyError:
-            new_instance = cls._cache[args] = cls(*args)
+            new_instance = cls._cache[cache_key] = cls(**kw)
             return new_instance
 
-    def __init__(self, venv, cwd=None):
+    def __init__(self, venv, cwd=None, env=None):
         self._lock = Lock()
         assert venv is not None, "'PY2_VIRTUAL_ENV' is not defined"
         if cwd is None:
@@ -59,7 +60,9 @@ class Python2Engine:
         python2_exe = join(venv, "bin/python")
         assert exists(python2_exe), "{0} does not exist!".format(python2_exe)
         logger.debug("Starting Python2 engine in {0}".format(cwd))
-        env = {"PYTHONPATH": cwd}
+        if env is None:
+            env = {}
+        env.update({"PYTHONPATH": cwd})
         self.process = Popen([python2_exe, _PYTHON2_HELPER_SCRIPT],
                 stdin=PIPE, stdout=PIPE, env=env, cwd=cwd)
 
@@ -162,8 +165,13 @@ class Mock(OperatorHackiness):
         return self._remote_reference,
 
 
-def to_use(module_name, winge=False, cwd=None):
-    engine = Python2Engine.new(PYTHON2_VENV, cwd)
+def to_use(module_name, winge=False, cwd=None, env=None):
+    """
+    Imports module_name into a new Python2 environment.
+    cwd may be overridden; defaults to Python2 virtualenv.
+    env dict may be provided, defaults to an empty environment.
+    """
+    engine = Python2Engine.new(venv=PYTHON2_VENV, cwd=cwd, env=env)
     assert engine is not None
     return _value_or_reference(command="import",
                               engine=engine,

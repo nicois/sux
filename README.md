@@ -85,6 +85,15 @@ Any exception raised in the python2 environment
 will cause an exception of the same name (to be raised in the python3
 space. See tests.test_boto for an example.
 
+I want to control the environment of the python2 instance!
+----------------------------------------------------------
+OK:
+
+    bf = sux.to_use('bioformats', env=os.environ)
+
+or, if you are not afraid of accessing private attributes:
+
+    bf = sux.to_use('bioformats', env=os.environ.__dict__['_data'])
 
 Is this fast?
 -------------
